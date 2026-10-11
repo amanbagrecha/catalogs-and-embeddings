@@ -1,4 +1,4 @@
-# The lake and the city: cloud-native data and Earth embeddings
+# Cloud-native data and Earth embeddings
 
 [![Fresh install](https://github.com/amanbagrecha/catalogs-and-embeddings/actions/workflows/fresh-install.yml/badge.svg)](https://github.com/amanbagrecha/catalogs-and-embeddings/actions/workflows/fresh-install.yml)
 
