@@ -2,14 +2,15 @@
 
 ## Before the day
 
-- [ ] Publish the repo at github.com/amanbagrecha/catalogs-and-embeddings (the setup block on the
-      Welcome page clones it), and the prepared files: `uv run cngeo datapack zip`, then attach
-      `dist/cngeo-datapack.zip` and everything in `dist/files/` to a release tagged `data-v1`.
+- [x] The repo is public at github.com/amanbagrecha/catalogs-and-embeddings, with the prepared files
+      in release `data-v1`. If you change a prepared file, rerun `uv run cngeo datapack zip` and
+      replace the release assets.
+- [ ] Check the Fresh install badge on the README is green (it runs weekly and on every push).
 - [ ] Send participants the setup block (end of the Welcome page) beforehand, so `uv sync` is not
       run by forty laptops on the venue Wi-Fi at once.
-- [ ] Run every notebook headless the day before: `uv run python tests/run_notebook.py notebooks/*.py`.
-      Overture deletes releases after 60 days; the notebooks always ask for the latest, so this
-      also checks that nothing moved.
+- [ ] The day before, run the Fresh install workflow once more (Actions tab, Run workflow), or locally:
+      `uv run python tests/run_notebook.py notebooks/*.py`. Overture deletes releases after 60
+      days; the notebooks always ask for the latest, so this also checks that nothing moved.
 - [ ] Keep the data-pack zip on a USB stick, for laptops that can't download.
 
 ## On the day
