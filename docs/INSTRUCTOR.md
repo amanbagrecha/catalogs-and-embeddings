@@ -9,7 +9,7 @@
 - [ ] Send participants the setup block (end of the Welcome page) beforehand, so `uv sync` is not
       run by forty laptops on the venue Wi-Fi at once.
 - [ ] The day before, run the Fresh install workflow once more (Actions tab, Run workflow), or locally:
-      `uv run python tests/run_notebook.py notebooks/*.py`. Overture deletes releases after 60
+      `uv run python tests/run_notebook.py` (every notebook, in order; works in PowerShell). Overture deletes releases after 60
       days; the notebooks always ask for the latest, so this also checks that nothing moved.
 - [ ] Keep the data-pack zip on a USB stick, for laptops that can't download.
 

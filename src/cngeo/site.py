@@ -233,7 +233,7 @@ def build(out: str | Path = "site", repo_url: str | None = None, only: list[str]
             if shown:
                 blocks.append(f'<pre class="code"><code>{_code_html(code)}</code></pre>')
             blocks.append(_output_html(obj, n, toc, charts))
-        (out / page).write_text(_page(i, "\n".join(b for b in blocks if b), toc, charts, repo_url))
+        (out / page).write_text(_page(i, "\n".join(b for b in blocks if b), toc, charts, repo_url), encoding="utf-8")
         print(f"{page}: {len(charts)} charts, {(out / page).stat().st_size / 1e6:.1f} MB")
     if mycatalog.FOLDER.exists():  # the catalog the lessons build; the pages link to its JSON files
         shutil.copytree(mycatalog.FOLDER, out / "my_catalog", dirs_exist_ok=True,

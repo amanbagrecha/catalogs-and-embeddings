@@ -1,7 +1,7 @@
 name: Fresh install
 
-# A new laptop, step by step: install uv the way the Welcome page says, `uv sync`, check, then run
-# every notebook from top to bottom. Also weekly, because cloud sources move (Overture deletes
+# A new laptop, step by step: install uv exactly as the Welcome page says, `uv sync`, check, then
+# run every notebook from top to bottom. Also weekly, because cloud sources move (Overture deletes
 # old releases after 60 days, catalogs change).
 on:
   push:
@@ -17,10 +17,55 @@ concurrency:
 
 env:
   MPLBACKEND: Agg              # no screen on CI machines
-  PYTHONIOENCODING: utf-8
+  PYTHONIOENCODING: utf-8      # CI output is a pipe, not a console
+  UV_PYTHON_PREFERENCE: only-managed   # ignore any Python already there, as on a new laptop
 
 jobs:
-  bare-linux:
+  windows:
+    # Most participants: Windows PowerShell 5.1 (what every Windows 10/11 has), no git, no Python.
+    name: Windows, PowerShell, no git
+    runs-on: windows-latest
+    timeout-minutes: 45
+    defaults:
+      run:
+        shell: powershell
+    steps:
+      - name: 1. Install uv
+        run: powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+      - name: Close PowerShell and open it again (uv on the PATH)
+        run: '"$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append'
+      - name: 2. Download the workshop as a ZIP, in the home folder
+        run: |
+          cd $HOME
+          irm https://github.com/${{ github.repository }}/archive/${{ github.sha }}.zip -OutFile workshop.zip
+          Expand-Archive workshop.zip -DestinationPath .
+          Rename-Item "catalogs-and-embeddings-${{ github.sha }}" catalogs-and-embeddings-main
+      - name: uv sync
+        run: cd $HOME\catalogs-and-embeddings-main; uv sync --locked
+      - name: uv run cngeo check
+        run: cd $HOME\catalogs-and-embeddings-main; uv run cngeo check
+      - name: The README's DuckDB tip
+        run: cd $HOME\catalogs-and-embeddings-main; uv run python -c "import duckdb; duckdb.sql('INSTALL spatial; INSTALL httpfs')"
+      - name: Run every notebook (the instructor's command)
+        run: cd $HOME\catalogs-and-embeddings-main; uv run python tests/run_notebook.py
+      - name: Check the catalog and the byte counter
+        run: cd $HOME\catalogs-and-embeddings-main; uv run python tests/check_outputs.py
+      - name: 3. uv run marimo edit notebooks (starts and answers)
+        run: |
+          cd $HOME\catalogs-and-embeddings-main
+          $marimo = Start-Process uv -ArgumentList "run", "marimo", "edit", "notebooks", "--headless", "--no-token", "--port", "2718" -PassThru -NoNewWindow
+          $up = $false
+          foreach ($i in 1..60) {
+            Start-Sleep -Seconds 2
+            try { if ((Invoke-WebRequest http://localhost:2718/health -UseBasicParsing).StatusCode -eq 200) { $up = $true; break } } catch {}
+          }
+          Stop-Process -Id $marimo.Id -Force
+          if (-not $up) { throw "marimo did not answer on port 2718" }
+          "marimo answered after about $(2 * $i) s"
+      - name: Build one website page (instructor)
+        run: cd $HOME\catalogs-and-embeddings-main; uv run cngeo site --only 00_start_here.py --out site-test
+
+  linux:
     name: Linux with nothing installed
     runs-on: ubuntu-latest
     container: ubuntu:24.04    # no Python, no uv, no git
@@ -33,42 +78,30 @@ jobs:
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Install Python and the packages
+      - name: uv sync
         run: uv sync --locked
-      - name: Check the setup
+      - name: uv run cngeo check
         run: uv run cngeo check
       - name: Run every notebook
         run: uv run python tests/run_notebook.py notebooks/*.py
+      - name: Check the catalog and the byte counter
+        run: uv run python tests/check_outputs.py
 
-  laptops:
-    name: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+  macos:
+    name: macOS
+    runs-on: macos-latest
     timeout-minutes: 45
-    env:
-      UV_PYTHON_PREFERENCE: only-managed   # ignore the runner's own Python, as on a new laptop
-    defaults:
-      run:
-        shell: bash
     steps:
       - uses: actions/checkout@v4
-      - name: Install uv (macOS)
-        if: runner.os == 'macOS'
+      - name: Install uv
         run: |
           curl -LsSf https://astral.sh/uv/install.sh | sh
           echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      - name: Install uv (Windows)
-        if: runner.os == 'Windows'
-        shell: pwsh
-        run: |
-          powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-          "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-      - name: Install Python and the packages
+      - name: uv sync
         run: uv sync --locked
-      - name: Check the setup
+      - name: uv run cngeo check
         run: uv run cngeo check
       - name: Run every notebook
         run: uv run python tests/run_notebook.py notebooks/*.py
+      - name: Check the catalog and the byte counter
+        run: uv run python tests/check_outputs.py

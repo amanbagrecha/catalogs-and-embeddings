@@ -21,15 +21,30 @@ Open data and open-source Python only; no Earth Engine.
 
 You need [uv](https://docs.astral.sh/uv/), which also installs the right Python (3.12).
 
-```bash
-git clone https://github.com/amanbagrecha/catalogs-and-embeddings && cd catalogs-and-embeddings
-uv sync                               # Python 3.12 + dependencies
+**Windows** (PowerShell, no git needed):
+
+```powershell
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"   # then reopen PowerShell
+irm https://github.com/amanbagrecha/catalogs-and-embeddings/archive/main.zip -OutFile workshop.zip
+Expand-Archive workshop.zip -DestinationPath .
+cd catalogs-and-embeddings-main
+uv sync
 uv run cngeo check                    # everything should say True
-uv run marimo edit notebooks/
+uv run marimo edit notebooks
 ```
 
-The badge above is a weekly check that these steps work on a machine with nothing installed
-(Linux, macOS and Windows), all the way to running every notebook.
+**macOS and Linux:**
+
+```bash
+curl -LsSf https://astral.sh/uv/install.sh | sh     # then open a new terminal
+git clone https://github.com/amanbagrecha/catalogs-and-embeddings && cd catalogs-and-embeddings
+uv sync
+uv run cngeo check                    # everything should say True
+uv run marimo edit notebooks
+```
+
+The badge above is a weekly check that exactly these steps work on machines with nothing
+installed: Windows (PowerShell, no git), macOS and Linux, all the way to running every notebook.
 
 There is no data to download first: the lessons read live from the cloud, and the few prepared
 files download themselves the first time a notebook needs them. On weak Wi-Fi, fetch them all at

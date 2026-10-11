@@ -106,9 +106,9 @@ def show(path) -> object:
         return "Click a file above to see what is inside."
     path = Path(path)
     if path.suffix == ".json":
-        text = path.read_text().strip()
+        text = path.read_text(encoding="utf-8").strip()
         text = re.sub(r"\[[^\[\]{}]*\]", lambda m: re.sub(r"\s+", " ", m.group()).replace("[ ", "[").replace(" ]", "]"), text)
-        return mo.md(f"`{path.relative_to(FOLDER)}`\n\n```json\n{text}\n```")
+        return mo.md(f"`{path.relative_to(FOLDER).as_posix()}`\n\n```json\n{text}\n```")
     size = path.stat().st_size
     size = f"{size / 1e6:.1f} MB" if size > 1e5 else f"{size / 1e3:.1f} kB"
-    return f"{path.relative_to(FOLDER)}: {size} of data, the file an item's JSON points to"
+    return f"{path.relative_to(FOLDER).as_posix()}: {size} of data, the file an item's JSON points to"

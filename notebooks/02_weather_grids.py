@@ -224,7 +224,7 @@ def _(mycatalog, rain):
                   datetime="2022-09-04T13:30:00", bbox=[77.15, 12.45, 78.15, 13.45])
 
     files = sorted(p.relative_to(zarr_path) for p in zarr_path.rglob("*") if p.is_file())
-    [str(f) for f in files[:8]]
+    [f.as_posix() for f in files[:8]]
     return
 
 

@@ -174,22 +174,36 @@ def _(mo):
 
     ## Get set up
 
-    You need [uv](https://docs.astral.sh/uv/), which installs Python and every package for you. In a
-    terminal:
+    You need [uv](https://docs.astral.sh/uv/), which installs Python and every package for you.
+
+    **Windows.** Open PowerShell (Start menu, type "PowerShell") and run these one at a time:
+
+    ```powershell
+    # 1. install uv, once. Then close PowerShell and open it again.
+    powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+
+    # 2. download the workshop and install its packages (no git needed)
+    irm https://github.com/amanbagrecha/catalogs-and-embeddings/archive/main.zip -OutFile workshop.zip
+    Expand-Archive workshop.zip -DestinationPath .
+    cd catalogs-and-embeddings-main
+    uv sync
+
+    # 3. open the notebooks in your browser
+    uv run marimo edit notebooks
+    ```
+
+    **macOS and Linux.** In a terminal:
 
     ```bash
-    # 1. install uv, once
-    curl -LsSf https://astral.sh/uv/install.sh | sh               # macOS, Linux
-    powershell -c "irm https://astral.sh/uv/install.ps1 | iex"    # Windows
-
-    # 2. the workshop and its packages (no git? download the ZIP from GitHub)
+    curl -LsSf https://astral.sh/uv/install.sh | sh     # once; then open a new terminal
     git clone https://github.com/amanbagrecha/catalogs-and-embeddings
     cd catalogs-and-embeddings
     uv sync
-
-    # 3. open the notebooks
-    uv run marimo edit notebooks/
+    uv run marimo edit notebooks
     ```
+
+    To come back later, open a terminal in the workshop folder and run `uv run marimo edit notebooks`
+    again.
 
     There is no data to download first. The lessons read their data straight from the cloud, and
     the few small files we prepared in advance download themselves when a notebook needs them. In

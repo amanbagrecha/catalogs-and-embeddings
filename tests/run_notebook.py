@@ -1,12 +1,17 @@
-"""Execute a marimo notebook headlessly; any cell error raises and exits non-zero.
+"""Execute marimo notebooks headlessly; any cell error raises and exits non-zero.
 
-    uv run python tests/run_notebook.py notebooks/01_satellite_images.py
-    uv run python tests/run_notebook.py notebooks/*.py
+    uv run python tests/run_notebook.py                                     # every notebook, in order
+    uv run python tests/run_notebook.py notebooks/01_satellite_images.py   # one
+    uv run python tests/run_notebook.py "notebooks/0*.py"                   # a pattern (works in PowerShell too)
 """
 
+import glob
 import importlib.util
 import sys
 import time
+from pathlib import Path
+
+NOTEBOOKS = Path(__file__).resolve().parents[1] / "notebooks"
 
 
 def run(path: str) -> None:
@@ -15,9 +20,11 @@ def run(path: str) -> None:
     spec.loader.exec_module(mod)
     t0 = time.time()
     _, defs = mod.app.run()
-    print(f"ok  {path}  ({len(defs)} definitions, {time.time() - t0:.1f}s)")
+    print(f"ok  {Path(path).as_posix()}  ({len(defs)} definitions, {time.time() - t0:.1f}s)")
 
 
 if __name__ == "__main__":
-    for p in sys.argv[1:]:
+    # PowerShell and cmd pass patterns like notebooks/*.py through unexpanded, so expand them here
+    paths = [p for arg in sys.argv[1:] for p in (sorted(glob.glob(arg)) or [arg])]
+    for p in paths or sorted(str(p) for p in NOTEBOOKS.glob("*.py")):
         run(p)
