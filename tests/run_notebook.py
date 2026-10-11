@@ -20,7 +20,9 @@ def run(path: str) -> None:
     spec.loader.exec_module(mod)
     t0 = time.time()
     _, defs = mod.app.run()
-    print(f"ok  {Path(path).as_posix()}  ({len(defs)} definitions, {time.time() - t0:.1f}s)")
+    shown = Path(path).resolve()
+    shown = shown.relative_to(NOTEBOOKS.parent) if shown.is_relative_to(NOTEBOOKS.parent) else shown
+    print(f"ok  {shown.as_posix()}  ({len(defs)} definitions, {time.time() - t0:.1f}s)")
 
 
 if __name__ == "__main__":
