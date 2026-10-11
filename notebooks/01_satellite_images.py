@@ -54,7 +54,10 @@ def _(STUDY_LONLAT, pd):
         bbox=STUDY_LONLAT,                  # west, south, east, north, in degrees
         datetime="2017-01-01/2025-12-31",
     )
-    items = [i for i in search.items() if "43PGQ" in i.id]   # the tile with the lake
+    on_tile = [i for i in search.items() if "43PGQ" in i.id]   # the tile with the lake
+    by_version = sorted(on_tile, key=lambda i: i.properties["s2:sequence"])
+    per_day = {i.datetime.date(): i for i in by_version}      # one picture per day, the newest
+    items = sorted(per_day.values(), key=lambda i: i.datetime)
 
     scenes = pd.DataFrame({
         "date": [i.datetime.replace(tzinfo=None) for i in items],
@@ -307,10 +310,11 @@ def _(charts, earth_search, pd):
     my_box = (77.58, 12.96, 77.61, 12.99)     # west, south, east, north: around Cubbon Park
     my_year = "2024"
 
-    found = list(earth_search.search(collections=["sentinel-2-l2a"], bbox=my_box,
-                                     datetime=my_year).items())
-    by_month = pd.DataFrame({"month": [i.datetime.month for i in found],
-                             "cloud": [i.properties["eo:cloud_cover"] for i in found]})
+    found = earth_search.search(collections=["sentinel-2-l2a"], bbox=my_box,
+                                datetime=my_year)
+    days = {i.datetime.date(): i for i in found.items()}      # one picture per day
+    by_month = pd.DataFrame({"month": [d.month for d in days],
+                             "cloud": [i.properties["eo:cloud_cover"] for i in days.values()]})
     (by_month.groupby("month").cloud
      .agg(pictures="size", nearly_clear=lambda c: int((c < 10).sum()))
      .rename(index=dict(enumerate(charts.MONTHS, start=1))))
@@ -340,6 +344,7 @@ def _(charts, href, net, rasterio):
                    title=f"The whole tile at {whole_tile.shape[2]:,} x {whole_tile.shape[1]:,} pixels",
                    subtitle=f"read {_fetched.mb:.1f} MB in {_fetched.requests} requests")
     return
+
 
 if __name__ == "__main__":
     app.run()
