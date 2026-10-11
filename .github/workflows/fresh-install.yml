@@ -1,0 +1,74 @@
+name: Fresh install
+
+# A new laptop, step by step: install uv the way the Welcome page says, `uv sync`, check, then run
+# every notebook from top to bottom. Also weekly, because cloud sources move (Overture deletes
+# old releases after 60 days, catalogs change).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 3 * * 1"   # Mondays, 03:00 UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MPLBACKEND: Agg              # no screen on CI machines
+  PYTHONIOENCODING: utf-8
+
+jobs:
+  bare-linux:
+    name: Linux with nothing installed
+    runs-on: ubuntu-latest
+    container: ubuntu:24.04    # no Python, no uv, no git
+    timeout-minutes: 45
+    steps:
+      - name: Get the two tools the setup needs (curl, git)
+        run: apt-get update && apt-get install -y --no-install-recommends curl ca-certificates git
+      - uses: actions/checkout@v4
+      - name: Install uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install Python and the packages
+        run: uv sync --locked
+      - name: Check the setup
+        run: uv run cngeo check
+      - name: Run every notebook
+        run: uv run python tests/run_notebook.py notebooks/*.py
+
+  laptops:
+    name: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 45
+    env:
+      UV_PYTHON_PREFERENCE: only-managed   # ignore the runner's own Python, as on a new laptop
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install uv (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - name: Install uv (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+          "$env:USERPROFILE\.local\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+      - name: Install Python and the packages
+        run: uv sync --locked
+      - name: Check the setup
+        run: uv run cngeo check
+      - name: Run every notebook
+        run: uv run python tests/run_notebook.py notebooks/*.py
