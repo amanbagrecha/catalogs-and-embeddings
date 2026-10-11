@@ -47,7 +47,7 @@ installed: Windows (PowerShell, no git), macOS and Linux, all the way to running
 
 There is no data to download first: the lessons read live from the cloud, and the few prepared
 files download themselves the first time a notebook needs them. On weak Wi-Fi, fetch them all at
-once with `uv run cngeo datapack download` (~130 MB).
+once with `uv run cngeo datapack download` (~110 MB).
 
 The first DuckDB query downloads its `spatial` and `httpfs` extensions (~75 MB). Run
 `uv run python -c "import duckdb; duckdb.sql('INSTALL spatial; INSTALL httpfs')"` once before the day.

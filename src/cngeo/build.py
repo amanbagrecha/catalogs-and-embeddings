@@ -224,7 +224,6 @@ IMERG = "https://dynamical-nasa-imerg.s3.us-west-2.amazonaws.com/nasa-imerg-anal
 CORESTACK = ("https://spatio-temporal-asset-catalog.s3.ap-south-1.amazonaws.com/CorestackCatalogs_merged_collection/"
              "tehsil_wise/karnataka/bengaluru_urban/bengaluru_south/collection.json")
 BUILDINGS_BOX = (77.675, 12.915, 77.705, 12.945)   # ~3 x 3 km east of the lake: Ecospace, Kadubeesanahalli
-CLAY = "https://huggingface.co/datasets/Major-TOM/Core-S2L2A-249k-Clay-v1_5/resolve/main/Clay_crop_384x384.parquet"
 
 
 def imerg():
@@ -327,41 +326,6 @@ def corestack(force: bool = False):
     print(f"corestack: {len(wb)} water bodies, {len(mws)} micro-watersheds")
 
 
-def chips(force: bool = False, sample: int = 20_000):
-    """A global sample of Clay v1.5 chip embeddings (Major TOM, 249k Sentinel-2 chips of 3.84 km)."""
-    import io
-
-    import pyarrow.parquet as pq
-
-    out = datapack.path("chips")
-    if out.exists() and not force:
-        return
-    src = _cache("world/Clay_crop_384x384.parquet")
-    if not src.exists():
-        import urllib.request
-
-        urllib.request.urlretrieve(CLAY, src)
-    tb = pq.read_table(src, columns=["embedding", "centre_lat", "centre_lon", "grid_cell", "timestamp", "parquet_url", "parquet_row"])
-    n = tb.num_rows
-    e = np.asarray(tb["embedding"].combine_chunks().flatten(), dtype="float32").reshape(n, -1)
-    e = e / np.linalg.norm(e, axis=1, keepdims=True)
-    rng = np.random.default_rng(0)
-    mean = e.mean(0)
-    _, _, vt = np.linalg.svd(e[rng.choice(n, 40_000, replace=False)] - mean, full_matrices=False)
-    z = (e - mean) @ vt[:64].T                                     # 1024 -> 64 numbers per chip
-    z64 = z / np.linalg.norm(z, axis=1, keepdims=True)
-    lo, hi = np.percentile(z[:, :3], [2, 98], axis=0)
-    rgb = (np.clip((z[:, :3] - lo) / (hi - lo), 0, 1) * 255).astype(int)
-    df = tb.select(["centre_lat", "centre_lon", "grid_cell", "timestamp", "parquet_url", "parquet_row"]).to_pandas()
-    df = df.rename(columns={"centre_lat": "lat", "centre_lon": "lon"})
-    df["rgb"] = [f"#{r:02x}{g:02x}{b:02x}" for r, g, b in rgb]
-    for i in range(64):
-        df[f"e{i}"] = np.round(z64[:, i] * 127).astype("int8")
-    out.parent.mkdir(parents=True, exist_ok=True)
-    df.to_parquet(out, index=False)
-    print(f"chips: {n} chips, 64 numbers each")
-
-
 # ---------------------------------------------------------------------------
 # Small helpers shared with the lessons
 # ---------------------------------------------------------------------------
@@ -391,7 +355,6 @@ def _read(path: Path) -> np.ndarray:
 RECIPES = {  # prepared file -> (the code that makes it, build steps to run, what making it downloads)
     "sentinel2_bands": ([sentinel2_bands, bands], ["bands"], "about 135 MB of Sentinel-2 from Earth Search, under a minute"),
     "rain": ([imerg, rain], ["rain"], "about 0.3 GB of NASA IMERG (28 years at one point), about 15 minutes"),
-    "chips": ([chips], ["chips"], "1.1 GB from Hugging Face (all 249,000 Clay embeddings)"),
     "aef_change": ([aef, aef_change], ["aef", "aef_change"], "about 460 MB of AlphaEarth (nine years of the study area), about 3 minutes"),
     "label_curve": ([label_curve], ["aef", "tessera", "label_curve"], "about 280 MB (AlphaEarth, TESSERA and Sentinel-2 for 2021), then 240 small models"),
 }
@@ -420,7 +383,7 @@ def recipe(name: str):
 
 STEPS = {"sentinel2": sentinel2, "bands": bands, "worldcover": worldcover, "aef": aef, "tessera": tessera,
          "aef_change": aef_change, "label_curve": label_curve, "rain": rain, "buildings": buildings,
-         "corestack": corestack, "chips": chips}
+         "corestack": corestack}
 
 
 def run(steps: list[str] | None = None, force: bool = False):

@@ -5,7 +5,7 @@ for example 27 years of rain at the lake or nine years of AlphaEarth change. Eac
 downloaded the first time a notebook asks for it (``fetch``), a few megabytes at a time.
 
     uv run cngeo datapack status
-    uv run cngeo datapack download     # everything at once (~130 MB), for a room with weak Wi-Fi
+    uv run cngeo datapack download     # everything at once (~110 MB), for a room with weak Wi-Fi
 """
 
 from __future__ import annotations
@@ -41,7 +41,6 @@ FILES = {
     "row_groups": "bellandur/overture_row_groups.parquet",  # the row groups of the Overture file we queried
     "waterbodies": "bellandur/waterbodies.parquet",         # CoRE Stack water bodies, water area per year
     "watersheds": "bellandur/watersheds.parquet",           # CoRE Stack micro-watersheds
-    "chips": "world/clay_chips.parquet",                    # 249k global chips, 64 numbers each
 }
 YEARS = {"sentinel2": [2017, 2025], "aef": [2017, 2021, 2025], "tessera": [2025], "tessera_scales": [2025]}
 

@@ -179,15 +179,3 @@ def pca_picture(e: np.ndarray) -> np.ndarray:
     lo, hi = np.percentile(z, [2, 98], axis=0)
     return np.clip((z - lo) / (hi - lo), 0, 1).reshape(h, w, 3)
 
-
-def chip_picture(parquet_url: str, row_group: int, size: int = 256) -> np.ndarray:
-    """The Sentinel-2 thumbnail of one Major TOM chip, read from a single row group of a big Parquet file."""
-    import io
-
-    import fsspec
-    import pyarrow.parquet as pq
-    from PIL import Image
-
-    with fsspec.open(parquet_url, "rb", block_size=256 * 1024) as f:
-        png = pq.ParquetFile(f).read_row_group(int(row_group), columns=["thumbnail"])["thumbnail"][0].as_py()
-    return np.asarray(Image.open(io.BytesIO(png)).convert("RGB").resize((size, size)))

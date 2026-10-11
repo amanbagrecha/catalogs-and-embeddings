@@ -408,51 +408,6 @@ def label_curve(curve: pd.DataFrame, title: str = "", subtitle: str = ""):
     )
 
 
-def world_search(chips: pd.DataFrame, start: int, dims: int = 16, width: int = 520, title: str = "", subtitle: str = ""):
-    """Every dot is a few-km patch of land somewhere on Earth. Click one: the others are coloured by
-    how much they look like it, and the closest matches are listed on the right.
-
-    ``chips`` has ``id, lon, lat, rgb`` and ``p0 … p{dims-1}`` (unit vectors x100).
-    """
-    pick = alt.selection_point(name="pick", on="click", fields=["id"], value=[{"id": int(start)}], clear=False,
-                               nearest=True)
-    data = _pack(chips.assign(k=1), "p", dims)
-    # plain lon/lat axes with fixed ranges: a fitted map projection would depend on the data and,
-    # through the click, on itself (Vega reports a cycle)
-    height = round(width * 140 / 360)
-    base = alt.Chart(data).encode(
-        x=alt.X("lon:Q", scale=alt.Scale(domain=[-180, 180], nice=False), axis=None),
-        y=alt.Y("lat:Q", scale=alt.Scale(domain=[-60, 80], nice=False), axis=None),
-    )
-    base = _unpack(base, "p")
-    under = base.mark_circle(size=7, opacity=0).add_params(pick)
-    lookup = base.transform_lookup(lookup="k", from_=alt.LookupSelection(key="k", param="pick"), as_="q") \
-        .transform_calculate(sim=f"datum.q ? ({_dot('p', dims)}) / 10000 : 0")
-    dots = lookup.mark_circle(size=7, opacity=0.9).encode(
-        color=alt.Color("sim:Q", scale=alt.Scale(range=SIMILAR, domain=[0.2, 1], clamp=True),
-                        legend=alt.Legend(title="similarity to the clicked place", gradientLength=200, gradientThickness=8)),
-        order=alt.Order("sim:Q"),
-        tooltip=[alt.Tooltip("lat:Q", format=".2f"), alt.Tooltip("lon:Q", format=".2f"), alt.Tooltip("sim:Q", format=".2f")],
-    )
-    here = base.transform_filter(pick).mark_point(size=140, shape="circle", strokeWidth=2, color=INK)
-    m = alt.layer(under, dots, here).properties(width=width, height=height)
-    top = (
-        lookup.transform_window(rank="rank()", sort=[alt.SortField("sim", order="descending")])
-        .transform_filter("datum.rank > 1 && datum.rank <= 16")
-        .transform_calculate(place="format(abs(datum.lat), '.1f') + (datum.lat >= 0 ? '°N ' : '°S ') + "
-                                   "format(abs(datum.lon), '.1f') + (datum.lon >= 0 ? '°E' : '°W')")
-        .mark_bar(color="#b47a3c", height=10)
-        .encode(y=alt.Y("place:N", sort=alt.SortField("rank"), title=None),
-                x=alt.X("sim:Q", title="similarity", scale=alt.Scale(domain=[0, 1]), axis=alt.Axis(values=[0, 0.5, 1])),
-                tooltip=["place:N", alt.Tooltip("sim:Q", format=".2f")])
-        .properties(width=120, height=height, title=alt.Title("closest matches", fontSize=12))
-    )
-    chart = alt.hconcat(m, top, spacing=12)
-    if title:
-        chart = chart.properties(title=alt.Title(title, subtitle=subtitle))
-    return chart
-
-
 def image(arr, cmap="magma", vmin=None, vmax=None, label: str = "", width: float = 6.4, marker=None):
     """A single-band array as a plain picture (matplotlib), with a thin colour bar underneath."""
     import matplotlib.pyplot as plt
@@ -739,24 +694,6 @@ def row_groups(rg: pd.DataFrame, box: tuple, title: str = "", subtitle: str = ""
     q = alt.Chart(pd.DataFrame({"w": [w], "s": [s], "e": [e], "n": [n]})).mark_rect(
         fill=None, stroke=INK, strokeWidth=2).encode(x="w:Q", x2="e:Q", y="s:Q", y2="n:Q")
     return alt.layer(boxes, q).properties(width=480, height=420, title=alt.Title(title, subtitle=subtitle) if title else alt.Undefined)
-
-
-def gallery(images: dict[str, np.ndarray], cols: int = 4, width: float = 9.6):
-    """A grid of small pictures with captions (matplotlib)."""
-    import matplotlib.pyplot as plt
-
-    n = len(images)
-    rows = int(np.ceil(n / cols))
-    fig, axes = plt.subplots(rows, cols, figsize=(width, width / cols * rows * 1.12))
-    for ax in np.atleast_1d(axes).ravel():
-        ax.set_axis_off()
-    for ax, (label, img) in zip(np.atleast_1d(axes).ravel(), images.items()):
-        ax.imshow(img)
-        ax.set_title(label, fontsize=9, color=INK, loc="left")
-    fig.patch.set_alpha(0)
-    fig.tight_layout()
-    plt.close(fig)
-    return fig
 
 
 def paint(classes: np.ndarray, names: list[str]) -> np.ndarray:

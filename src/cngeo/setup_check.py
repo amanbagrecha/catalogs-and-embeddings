@@ -15,7 +15,6 @@ ENDPOINTS = {  # one per lesson
                   "CorestackCatalogs_merged_collection/catalog.json",
     "Overture Maps": "https://stac.overturemaps.org/catalog.json",
     "Source Cooperative (AlphaEarth)": "https://data.source.coop/tge-labs/aef/v1/annual/aef_index.parquet",
-    "Hugging Face (Major TOM)": "https://huggingface.co/api/datasets/Major-TOM/Core-S2L2A",
     "Workshop files (GitHub)": None,  # filled in below: one small prepared file
 }
 
