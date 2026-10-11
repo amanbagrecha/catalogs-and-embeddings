@@ -71,7 +71,7 @@ a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset:
 .lessons .time { font: 400 0.75rem var(--mono); color: var(--muted); }
 .lessons a.current { color: var(--ink); font-weight: 600; box-shadow: inset 3px 0 0 var(--accent); padding-left: 10px; }
 .lessons a.current .num { color: var(--accent); }
-.repo { display: inline-block; margin-top: 20px; font-size: 0.85rem; }
+.repo { display: block; width: fit-content; margin-top: 14px; font-size: 0.85rem; }
 
 /* ---- table of contents ----------------------------------------------- */
 .toc p {

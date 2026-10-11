@@ -28,8 +28,8 @@ from . import mycatalog
 
 ROOT = Path(__file__).resolve().parents[2]
 NOTEBOOKS = ROOT / "notebooks"
-COURSE = "The lake and the city"
-TAGLINE = "Cloud-native data and Earth embeddings · a workshop, Bengaluru, 11:00–16:00"
+COURSE = "Cloud-native data and Earth embeddings"
+TAGLINE = "A workshop at RV College of Engineering, Bengaluru · 12 October 2026"
 
 PAGES = [  # notebook, page file, short title, time
     ("00_intro_to_remote_sensing.py", "index.html", "Welcome", "11:00"),
@@ -158,13 +158,15 @@ def _output_html(obj, n: int, toc: list, charts: dict) -> str:
 # ---------------------------------------------------------------------------
 # Page
 # ---------------------------------------------------------------------------
-def _sidebar(current: str, repo_url: str | None) -> str:
+def _sidebar(current: str, repo_url: str | None, home_url: str | None = None) -> str:
     links = []
     for nb, page, title, time in PAGES:
         cls = ' class="current"' if page == current else ""
         num = "·" if nb.startswith("00") else str(int(nb[:2]))
         links.append(f'<a href="{page}"{cls}><span class="num">{num}</span><span class="t">{title}</span><span class="time">{time}</span></a>')
     repo = f'<a class="repo" href="{html.escape(repo_url)}">Notebooks &amp; code ↗</a>' if repo_url else ""
+    if home_url:  # back to the website the course lives on
+        repo += f'<a class="repo" href="{html.escape(home_url)}">← {html.escape(home_url.split("//")[-1].strip("/"))}</a>'
     return f"""<aside class="sidebar">
   <a class="course" href="index.html"><span class="course-title">{COURSE.replace(" and ", "<br>and ")}</span><span class="course-sub">{TAGLINE}</span></a>
   <nav class="lessons">{''.join(links)}</nav>
@@ -172,7 +174,7 @@ def _sidebar(current: str, repo_url: str | None) -> str:
 </aside>"""
 
 
-def _page(i: int, body: str, toc: list, charts: dict, repo_url: str | None) -> str:
+def _page(i: int, body: str, toc: list, charts: dict, repo_url: str | None, home_url: str | None = None) -> str:
     _, page, title, _ = PAGES[i]
     prev_ = PAGES[i - 1] if i > 0 else None
     next_ = PAGES[i + 1] if i + 1 < len(PAGES) else None
@@ -198,7 +200,7 @@ def _page(i: int, body: str, toc: list, charts: dict, repo_url: str | None) -> s
 </head>
 <body>
 <div class="layout">
-{_sidebar(page, repo_url)}
+{_sidebar(page, repo_url, home_url)}
 <main class="content">
 {body}
 {pager}
@@ -217,7 +219,8 @@ for (const [id, spec] of Object.entries(SPECS)) {{
 """
 
 
-def build(out: str | Path = "site", repo_url: str | None = None, only: list[str] | None = None) -> Path:
+def build(out: str | Path = "site", repo_url: str | None = None, only: list[str] | None = None,
+          home_url: str | None = None) -> Path:
     """Run every lesson notebook and write the website into ``out``."""
     out = Path(out)
     (out / "assets").mkdir(parents=True, exist_ok=True)
@@ -233,7 +236,8 @@ def build(out: str | Path = "site", repo_url: str | None = None, only: list[str]
             if shown:
                 blocks.append(f'<pre class="code"><code>{_code_html(code)}</code></pre>')
             blocks.append(_output_html(obj, n, toc, charts))
-        (out / page).write_text(_page(i, "\n".join(b for b in blocks if b), toc, charts, repo_url), encoding="utf-8")
+        (out / page).write_text(_page(i, "\n".join(b for b in blocks if b), toc, charts, repo_url, home_url),
+                                 encoding="utf-8")
         print(f"{page}: {len(charts)} charts, {(out / page).stat().st_size / 1e6:.1f} MB")
     if mycatalog.FOLDER.exists():  # the catalog the lessons build; the pages link to its JSON files
         shutil.copytree(mycatalog.FOLDER, out / "my_catalog", dirs_exist_ok=True,

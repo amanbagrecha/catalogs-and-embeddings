@@ -27,6 +27,7 @@ def main(argv: list[str] | None = None) -> int:
     st = sub.add_parser("site", help="build the static course website from the notebooks")
     st.add_argument("--out", default="site")
     st.add_argument("--repo-url", default=None, help="link to the notebooks repository, shown in the sidebar")
+    st.add_argument("--home-url", default=None, help="link back to the website the course is hosted on")
     st.add_argument("--only", action="append", help="build only this notebook or page (repeatable)")
 
     args = ap.parse_args(argv)
@@ -52,7 +53,7 @@ def main(argv: list[str] | None = None) -> int:
     elif args.cmd == "site":
         from .site import build
 
-        build(args.out, repo_url=args.repo_url, only=args.only)
+        build(args.out, repo_url=args.repo_url, only=args.only, home_url=args.home_url)
     return 0
 
 
