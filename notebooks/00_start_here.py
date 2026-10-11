@@ -93,7 +93,7 @@ def _(mo):
     | Temperature | [NASA POWER](https://power.larc.nasa.gov) analysis-ready store | Zarr |
     | Watersheds, water bodies | [CoRE Stack](https://core-stack.org) | STAC + GeoJSON |
     | Buildings | [Overture Maps](https://overturemaps.org) | GeoParquet + STAC |
-    | Embeddings | [AlphaEarth Foundations](https://source.coop/tge-labs/aef) (Google DeepMind), [TESSERA](https://source.coop/tessera/tessera) (Cambridge), [Clay v1.5 / Major TOM](https://huggingface.co/datasets/Major-TOM/Core-S2L2A-249k-Clay-v1_5) | COG, Zarr, GeoParquet |
+    | Embeddings | [AlphaEarth Foundations](https://source.coop/tge-labs/aef) (Google DeepMind) and [TESSERA](https://source.coop/tessera/tessera) (Cambridge) | COG, Zarr, GeoParquet |
     | Land cover labels | [ESA WorldCover 2021](https://esa-worldcover.org) | COG |
     """)
     return

@@ -51,7 +51,6 @@ The Cloud-Native Geospatial guide covers all of these: <https://guide.cloudnativ
 | 3 | Google–Microsoft Open Buildings (VIDA) | `https://data.source.coop/vida/google-microsoft-open-buildings/geoparquet/by_country_s2/country_iso=IND/…` | similar; avoid the 64 GB `IND.parquet` |
 | 4 | AlphaEarth Foundations (64-d, 2017–2025) | COGs + `aef_index.parquet` at `https://data.source.coop/tge-labs/aef/v1/annual/`; also `gs://alphaearth_foundations`; one global Zarr at `s3://us-west-2.opendata.source.coop/tge-labs/aef-mosaic/` | study area ~15 s with 16 threads. COGs are stored south-up; values `sign(q)·(|q|/127.5)²`, −128 = nodata. CC BY 4.0; model closed |
 | 4 | TESSERA v1.1 (128-d, 2017–2025) | `geotessera.GeoTesseraZarr()` → `https://data.source.coop/tessera/tessera/zarr/v1.1-dclimate` | study area ~30 s. Not unit length: normalise. 2017 has gaps; use 2018+. Weights open |
-| 4 | Clay v1.5 chip embeddings (Major TOM, 249k chips) | `https://huggingface.co/datasets/Major-TOM/Core-S2L2A-249k-Clay-v1_5` (1 GB GeoParquet) | built into the data pack; thumbnails are one row group each in Major TOM's Core-S2L2A parquet |
 | 5 | ESA WorldCover 2021 | `https://esa-worldcover.s3.eu-central-1.amazonaws.com/v200/2021/map/…` | 4 s |
 
 ## Embeddings: further reading

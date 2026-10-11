@@ -12,13 +12,12 @@ app = marimo.App(
 def _():
     import marimo as mo
     import numpy as np
-    import pandas as pd
 
-    from cngeo import build, charts, datapack
+    from cngeo import charts, datapack
     from cngeo import embeddings as em
-    from cngeo.config import LAKE
+    from cngeo.config import LAKE, STUDY
 
-    return LAKE, build, charts, datapack, em, mo, np, pd
+    return LAKE, STUDY, charts, datapack, em, mo, np
 
 
 @app.cell(hide_code=True)
@@ -56,7 +55,8 @@ def _(mo):
 
 @app.cell
 def _(em):
-    tiles = em.aef_tiles(2025)   # DuckDB on the GeoParquet index: which file has our box?
+    our_box = (77.6494, 12.9085, 77.7143, 12.9530)  # west, south, east, north: 7 × 5 km around Bellandur lake
+    tiles = em.aef_tiles(2025, bbox=our_box)        # DuckDB on the GeoParquet index: which file has it?
     tiles[["year", "utm_zone", "path"]]
     return
 
@@ -72,8 +72,8 @@ def _(mo):
 
 
 @app.cell
-def _(em):
-    aef = em.alphaearth(2025)         # offline? use: aef = datapack.alphaearth(2025)
+def _(STUDY, em):
+    aef = em.alphaearth(2025, bounds=STUDY)   # the same box in UTM metres (config.py); offline? datapack.alphaearth(2025)
     f"{aef.shape[0]} numbers for each of {aef[0].size:,} pixels"
     return (aef,)
 
@@ -177,87 +177,12 @@ def _(mo):
     sharper 10 m detail of roads and buildings. They are different spaces: never compare a vector
     from one model with a vector from the other.
 
-    ## Going global
-
-    So far, pixels. Some models instead give one vector to a whole image chip. **Clay**, an open
-    model, has embedded a sample of 249,000 Sentinel-2 chips of 3.84 km spread over every continent
-    (the Major TOM dataset), and the result is a GeoParquet file on Hugging Face. We squeezed its
-    1,024 numbers per chip to 64 for the data pack. Which places on Earth look most like the chip that
-    covers east Bengaluru?
-    """)
-    return
-
-
-@app.cell
-def _(LAKE, datapack, np):
-    chips = datapack.table("chips")        # 249k chips: where, and 64 numbers each (prepared)
-    vectors = chips.filter(regex=r"^e\d+$").to_numpy("float32") / 127
-    here = int(np.argmin((chips.lat - LAKE[1]) ** 2 + (chips.lon - LAKE[0]) ** 2))
-    chips["similarity"] = vectors @ vectors[here]
-    matches = chips.drop(index=here).nlargest(8, "similarity")
-    matches[["lat", "lon", "similarity"]].round(3)
-    return chips, here, matches
-
-
-@app.cell(hide_code=True)
-def _(build):
-    build.recipe("chips")
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    Coordinates are not much to look at. Every Major TOM chip's picture sits in a big Parquet file
-    on Hugging Face with **one row per row group**, so fetching one picture is one small range
-    request. Here are east Bengaluru and its closest matches:
-    """)
-    return
-
-
-@app.cell
-def _(charts, chips, em, here, matches):
-    from concurrent.futures import ThreadPoolExecutor
-
-    def thumbnail(chip):
-        return em.chip_picture(chip.parquet_url, chip.parquet_row)   # one row group
-
-    show = [chips.loc[here], *[m for _, m in matches.iterrows()]]
-    with ThreadPoolExecutor(8) as pool:             # fetch the nine pictures together
-        thumbs = list(pool.map(thumbnail, show))
-    names = ["east Bengaluru"] + [f"{m.lat:.1f}, {m.lon:.1f}  ({m.similarity:.2f})"
-                                  for m in show[1:]]
-    charts.gallery(dict(zip(names, thumbs)), cols=3)
-    return
-
-
-@app.cell(hide_code=True)
-def _(charts, chips, here, np, pd):
-    _sample = pd.concat([chips.loc[[here]], chips.drop(index=here).sample(14_999, random_state=0)])
-    _v = _sample.filter(regex=r"^e\d+$").to_numpy("float32")[:, :16]     # the 16 main directions
-    _v = _v / np.linalg.norm(_v, axis=1, keepdims=True)
-    _table = pd.DataFrame({"id": range(len(_sample)), "lat": _sample.lat.values, "lon": _sample.lon.values})
-    for _i in range(16):
-        _table[f"p{_i}"] = np.round(_v[:, _i] * 100).astype(int)
-    charts.world_search(_table, start=0, title="Search the planet",
-                        subtitle="15,000 of the chips. Click any dot; the darkest dots look most like it.")
-    return
-
-
-@app.cell(hide_code=True)
-def _(mo):
-    mo.md(r"""
-    Click a desert, a forest, a farm belt, another city. The search knows nothing about places or
-    countries; it only compares what the ground looks like from space.
-
     ## Try it
 
     1. Change `LAKE` in the similarity cell to the coordinates of a park (try 77.682, 12.925) and see
        what else the model thinks is park.
     2. Compute the similarity map with TESSERA (`tessera` instead of `aef`). Where do the two models
        disagree?
-    3. In the global search, start from a chip in your home town: find its index with the nearest
-       latitude and longitude, and look at its matches.
     """)
     return
 

@@ -10,8 +10,7 @@ happened to it, and how would you find out from open data?
   Cloud-Optimized GeoTIFFs), rain (Zarr), watersheds and buildings (GeoParquet), and the catalogs
   that make them findable, including India's CoRE Stack.
 - **Afternoon: what a foundation model makes of it.** AlphaEarth and TESSERA pixel embeddings:
-  similarity search, clustering, few-label classification, change detection, and a global search
-  for places that look like east Bengaluru.
+  similarity search, clustering, few-label classification and change detection.
 
 Every lesson saves what it found into `my_catalog/`, a small STAC catalog that participants build
 during the day and could publish as is; the last lesson opens it all again from `catalog.json`.
@@ -64,7 +63,6 @@ The first DuckDB query downloads its `spatial` and `httpfs` extensions (~75 MB).
 | 3 | Buildings | [Overture Maps](https://overturemaps.org), latest release | GeoParquet + STAC | ODbL |
 | 4, 5 | Pixel embeddings | [AlphaEarth Foundations](https://source.coop/tge-labs/aef) (Google DeepMind), 2017–2025 | COG + GeoParquet index | CC BY 4.0 |
 | 4 | Pixel embeddings | [TESSERA v1.1](https://source.coop/tessera/tessera) (Cambridge), via `geotessera` | Zarr | CC0 (cite arXiv:2506.20380) |
-| 4 | Chip embeddings | [Clay v1.5 on Major TOM](https://huggingface.co/datasets/Major-TOM/Core-S2L2A-249k-Clay-v1_5) | GeoParquet | CC BY-SA 4.0 |
 | intro, 5 | Labels | [ESA WorldCover 2021](https://esa-worldcover.org) | COG | CC BY 4.0 |
 
 Attribution for AlphaEarth: "The AlphaEarth Foundations Satellite Embedding dataset is produced by
